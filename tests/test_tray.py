@@ -108,3 +108,27 @@ def test_posix_autostart_round_trip():
     assert autostart.LOGIN_FLAG in text
     autostart.set_enabled(False)
     assert not autostart.is_enabled()
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="named mutex")
+def test_second_tray_instance_is_refused():
+    import subprocess
+
+    from mic_monitor import tray
+
+    name = f"Local\\mic-monitor-test-{os.getpid()}"
+    code = (
+        "import sys; from mic_monitor import tray; "
+        f"print(tray.claim_single_instance({name!r})); sys.stdout.flush(); sys.stdin.read()"
+    )
+    holder = subprocess.Popen(
+        [sys.executable, "-c", code],
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True,
+    )
+    try:
+        assert holder.stdout.readline().strip() == "True"
+        assert tray.claim_single_instance(name) is False
+    finally:
+        holder.communicate("")
+    # Released when the holder exits.
+    assert tray.claim_single_instance(name) is True

@@ -38,7 +38,7 @@ curl -fsSL https://raw.githubusercontent.com/robworks-code/mic-monitor/main/inst
 ```
 
 Where things go: Windows keeps the environment in `%LOCALAPPDATA%\mic-monitor`
-and adds a Start Menu shortcut "mic-monitor tray"; macOS and Linux keep it in
+and adds a Start Menu shortcut "Mic Monitor"; macOS and Linux keep it in
 `~/.local/share/mic-monitor` with links in `~/.local/bin`. Nothing is
 installed system-wide and nothing runs at login unless you add it.
 

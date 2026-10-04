@@ -17,7 +17,7 @@ What it does:
   3. Installs mic-monitor into it from GitHub (no git needed).
   4. Copies the two commands, mic-monitor and mic-monitor-tray, to
      %LOCALAPPDATA%\mic-monitor\bin and adds that folder to your user PATH.
-  5. Adds a Start Menu shortcut "mic-monitor tray" and starts the tray icon.
+  5. Adds a Start Menu shortcut "Mic Monitor" and starts the tray icon.
 
 Uninstall stops mic-monitor and removes everything above, plus the tray's
 Start at login entry if it was turned on. Your saved settings
@@ -48,7 +48,9 @@ $Root = Join-Path $env:LOCALAPPDATA 'mic-monitor'
 $Venv = Join-Path $Root 'venv'
 $Bin = Join-Path $Root 'bin'
 $Icon = Join-Path $Root 'mic-monitor.ico'
-$Shortcut = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\mic-monitor tray.lnk'
+$Shortcut = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\Mic Monitor.lnk'
+# Name used by earlier versions; removed on install and uninstall.
+$OldShortcut = Join-Path $env:APPDATA 'Microsoft\Windows\Start Menu\Programs\mic-monitor tray.lnk'
 $Apps = @('mic-monitor.exe', 'mic-monitor-tray.exe')
 $SelfUrl = 'https://raw.githubusercontent.com/robworks-code/mic-monitor/main/install.ps1'
 
@@ -161,7 +163,9 @@ if ($Uninstall) {
     Remove-Owned $Venv
     Remove-Owned $Bin
     Remove-Owned $Icon
-    if (Test-Path -LiteralPath $Shortcut) { Remove-Item -LiteralPath $Shortcut -Force }
+    foreach ($s in $Shortcut, $OldShortcut) {
+        if (Test-Path -LiteralPath $s) { Remove-Item -LiteralPath $s -Force }
+    }
     # The tray's Start at login entry (mic_monitor.autostart).
     foreach ($key in 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run',
                      'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run') {
@@ -214,6 +218,7 @@ try {
     & $venvPython -c "from mic_monitor.tray import make_icon; make_icon(True).save(r'$Icon')" 2>&1 | Out-Null
 } catch { }
 
+if (Test-Path -LiteralPath $OldShortcut) { Remove-Item -LiteralPath $OldShortcut -Force }
 $shell = New-Object -ComObject WScript.Shell
 $link = $shell.CreateShortcut($Shortcut)
 $link.TargetPath = Join-Path $Bin 'mic-monitor-tray.exe'
@@ -235,8 +240,8 @@ Say ''
 Say "$installed is installed."
 Say ''
 Say 'Tray icon:'
-if ($NoLaunch) { Say '  in the Start Menu as "mic-monitor tray"' }
-else { Say '  running now (green = on, grey = off, click to toggle)' ; Say '  also in the Start Menu as "mic-monitor tray"' }
+if ($NoLaunch) { Say '  in the Start Menu as "Mic Monitor"' }
+else { Say '  running now (green = on, grey = off, click to toggle)' ; Say '  also in the Start Menu as "Mic Monitor"' }
 Say ''
 Say 'Commands (open a new terminal first):'
 Say '  mic-monitor            toggle monitoring on or off'

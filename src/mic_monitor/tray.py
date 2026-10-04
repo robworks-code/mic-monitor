@@ -258,8 +258,36 @@ def _log_exception() -> None:
         pass
 
 
+_instance_handle = None
+
+
+def claim_single_instance(name: str = "Local\\mic-monitor-tray") -> bool:
+    """False if another tray already holds the named mutex (Windows only).
+
+    The handle stays open for the life of the process; Windows releases it
+    when the process exits, including when it is killed.
+    """
+    global _instance_handle
+    if sys.platform != "win32":
+        return True
+    import ctypes
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.CreateMutexW.restype = ctypes.c_void_p
+    handle = kernel32.CreateMutexW(None, False, name)
+    if not handle:
+        return True
+    if ctypes.get_last_error() == 183:  # ERROR_ALREADY_EXISTS
+        kernel32.CloseHandle(ctypes.c_void_p(handle))
+        return False
+    _instance_handle = handle
+    return True
+
+
 def main(argv=None) -> int:
     argv = sys.argv[1:] if argv is None else argv
+    if not claim_single_instance():
+        return 0
     try:
         if autostart.LOGIN_FLAG in argv and config.last_state_on() and not cli.is_running():
             cli.start(remember=False)
